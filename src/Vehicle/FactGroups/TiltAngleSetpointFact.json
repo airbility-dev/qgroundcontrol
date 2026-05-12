@@ -1,0 +1,35 @@
+{
+    "version":      1,
+    "fileType":     "FactMetaData",
+    "QGC.MetaData.Facts":
+[
+{
+    "name":             "tiltFl",
+    "shortDesc":        "Tilt Setpoint FL",
+    "type":             "float",
+    "decimalPlaces":    1,
+    "units":            "deg"
+},
+{
+    "name":             "tiltFr",
+    "shortDesc":        "Tilt Setpoint FR",
+    "type":             "float",
+    "decimalPlaces":    1,
+    "units":            "deg"
+},
+{
+    "name":             "tiltRl",
+    "shortDesc":        "Tilt Setpoint RL",
+    "type":             "float",
+    "decimalPlaces":    1,
+    "units":            "deg"
+},
+{
+    "name":             "tiltRr",
+    "shortDesc":        "Tilt Setpoint RR",
+    "type":             "float",
+    "decimalPlaces":    1,
+    "units":            "deg"
+}
+]
+}

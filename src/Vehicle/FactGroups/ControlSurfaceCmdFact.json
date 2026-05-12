@@ -1,0 +1,35 @@
+{
+    "version":      1,
+    "fileType":     "FactMetaData",
+    "QGC.MetaData.Facts":
+[
+{
+    "name":             "leftAileron",
+    "shortDesc":        "Left Aileron",
+    "type":             "float",
+    "decimalPlaces":    1,
+    "units":            "deg"
+},
+{
+    "name":             "rightAileron",
+    "shortDesc":        "Right Aileron",
+    "type":             "float",
+    "decimalPlaces":    1,
+    "units":            "deg"
+},
+{
+    "name":             "leftRuddervator",
+    "shortDesc":        "Left Ruddervator",
+    "type":             "float",
+    "decimalPlaces":    1,
+    "units":            "deg"
+},
+{
+    "name":             "rightRuddervator",
+    "shortDesc":        "Right Ruddervator",
+    "type":             "float",
+    "decimalPlaces":    1,
+    "units":            "deg"
+}
+]
+}

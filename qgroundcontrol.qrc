@@ -88,6 +88,7 @@
         <file alias="USBBoardInfo.json">src/Comms/USBBoardInfo.json</file>
         <file alias="Vehicle/BatteryFact.json">src/Vehicle/FactGroups/BatteryFact.json</file>
         <file alias="Vehicle/ClockFact.json">src/Vehicle/FactGroups/ClockFact.json</file>
+        <file alias="Vehicle/ControlSurfaceCmdFact.json">src/Vehicle/FactGroups/ControlSurfaceCmdFact.json</file>
         <file alias="Vehicle/DistanceSensorFact.json">src/Vehicle/FactGroups/DistanceSensorFact.json</file>
         <file alias="Vehicle/EscStatusFactGroup.json">src/Vehicle/FactGroups/EscStatusFactGroup.json</file>
         <file alias="Vehicle/EstimatorStatusFactGroup.json">src/Vehicle/FactGroups/EstimatorStatusFactGroup.json</file>
@@ -100,6 +101,8 @@
         <file alias="Vehicle/SubmarineFact.json">src/Vehicle/FactGroups/SubmarineFact.json</file>
         <file alias="Vehicle/TemperatureFact.json">src/Vehicle/FactGroups/TemperatureFact.json</file>
         <file alias="Vehicle/TerrainFactGroup.json">src/Vehicle/FactGroups/TerrainFactGroup.json</file>
+        <file alias="Vehicle/TiltAngleSetpointFact.json">src/Vehicle/FactGroups/TiltAngleSetpointFact.json</file>
+        <file alias="Vehicle/TiltStatusFact.json">src/Vehicle/FactGroups/TiltStatusFact.json</file>
         <file alias="Vehicle/VehicleFact.json">src/Vehicle/FactGroups/VehicleFact.json</file>
         <file alias="Vehicle/VibrationFact.json">src/Vehicle/FactGroups/VibrationFact.json</file>
         <file alias="Vehicle/WindFact.json">src/Vehicle/FactGroups/WindFact.json</file>

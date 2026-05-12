@@ -105,6 +105,9 @@ Vehicle::Vehicle(LinkInterface*             link,
     , _windFactGroup                (this)
     , _vibrationFactGroup           (this)
     , _temperatureFactGroup         (this)
+    , _tiltAngleSetpointFactGroup   (this)
+    , _tiltStatusFactGroup          (this)
+    , _controlSurfaceCmdFactGroup   (this)
     , _clockFactGroup               (this)
     , _setpointFactGroup            (this)
     , _distanceSensorFactGroup      (this)
@@ -326,6 +329,9 @@ void Vehicle::_commonInit()
     _addFactGroup(&_windFactGroup,              _windFactGroupName);
     _addFactGroup(&_vibrationFactGroup,         _vibrationFactGroupName);
     _addFactGroup(&_temperatureFactGroup,       _temperatureFactGroupName);
+    _addFactGroup(&_tiltAngleSetpointFactGroup, _tiltAngleSetpointFactGroupName);
+    _addFactGroup(&_tiltStatusFactGroup,        _tiltStatusFactGroupName);
+    _addFactGroup(&_controlSurfaceCmdFactGroup, _controlSurfaceCmdFactGroupName);
     _addFactGroup(&_clockFactGroup,             _clockFactGroupName);
     _addFactGroup(&_setpointFactGroup,          _setpointFactGroupName);
     _addFactGroup(&_distanceSensorFactGroup,    _distanceSensorFactGroupName);

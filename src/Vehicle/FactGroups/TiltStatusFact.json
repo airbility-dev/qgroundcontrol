@@ -1,0 +1,41 @@
+{
+    "version":      1,
+    "fileType":     "FactMetaData",
+    "QGC.MetaData.Facts":
+[
+{ "name": "realtimeTickFl", "shortDesc": "Realtime Tick FL", "type": "uint16" },
+{ "name": "realtimeTickFr", "shortDesc": "Realtime Tick FR", "type": "uint16" },
+{ "name": "realtimeTickRl", "shortDesc": "Realtime Tick RL", "type": "uint16" },
+{ "name": "realtimeTickRr", "shortDesc": "Realtime Tick RR", "type": "uint16" },
+
+{ "name": "errorStatusFl",  "shortDesc": "Error Status FL",   "type": "uint8" },
+{ "name": "errorStatusFr",  "shortDesc": "Error Status FR",   "type": "uint8" },
+{ "name": "errorStatusRl",  "shortDesc": "Error Status RL",   "type": "uint8" },
+{ "name": "errorStatusRr",  "shortDesc": "Error Status RR",   "type": "uint8" },
+
+{ "name": "angleFl",        "shortDesc": "Tilt Angle FL",     "type": "float", "decimalPlaces": 1, "units": "deg" },
+{ "name": "angleFr",        "shortDesc": "Tilt Angle FR",     "type": "float", "decimalPlaces": 1, "units": "deg" },
+{ "name": "angleRl",        "shortDesc": "Tilt Angle RL",     "type": "float", "decimalPlaces": 1, "units": "deg" },
+{ "name": "angleRr",        "shortDesc": "Tilt Angle RR",     "type": "float", "decimalPlaces": 1, "units": "deg" },
+
+{ "name": "angularVelFl",   "shortDesc": "Angular Vel FL",    "type": "float", "decimalPlaces": 2, "units": "deg/s" },
+{ "name": "angularVelFr",   "shortDesc": "Angular Vel FR",    "type": "float", "decimalPlaces": 2, "units": "deg/s" },
+{ "name": "angularVelRl",   "shortDesc": "Angular Vel RL",    "type": "float", "decimalPlaces": 2, "units": "deg/s" },
+{ "name": "angularVelRr",   "shortDesc": "Angular Vel RR",    "type": "float", "decimalPlaces": 2, "units": "deg/s" },
+
+{ "name": "voltageFl",      "shortDesc": "Voltage FL",        "type": "float", "decimalPlaces": 2, "units": "V" },
+{ "name": "voltageFr",      "shortDesc": "Voltage FR",        "type": "float", "decimalPlaces": 2, "units": "V" },
+{ "name": "voltageRl",      "shortDesc": "Voltage RL",        "type": "float", "decimalPlaces": 2, "units": "V" },
+{ "name": "voltageRr",      "shortDesc": "Voltage RR",        "type": "float", "decimalPlaces": 2, "units": "V" },
+
+{ "name": "currentFl",      "shortDesc": "Current FL",        "type": "int32", "units": "mA" },
+{ "name": "currentFr",      "shortDesc": "Current FR",        "type": "int32", "units": "mA" },
+{ "name": "currentRl",      "shortDesc": "Current RL",        "type": "int32", "units": "mA" },
+{ "name": "currentRr",      "shortDesc": "Current RR",        "type": "int32", "units": "mA" },
+
+{ "name": "temperatureFl",  "shortDesc": "Temperature FL",    "type": "float", "decimalPlaces": 1, "units": "degC" },
+{ "name": "temperatureFr",  "shortDesc": "Temperature FR",    "type": "float", "decimalPlaces": 1, "units": "degC" },
+{ "name": "temperatureRl",  "shortDesc": "Temperature RL",    "type": "float", "decimalPlaces": 1, "units": "degC" },
+{ "name": "temperatureRr",  "shortDesc": "Temperature RR",    "type": "float", "decimalPlaces": 1, "units": "degC" }
+]
+}

@@ -42,6 +42,9 @@
 #include "VehicleRPMFactGroup.h"
 #include "VehicleSetpointFactGroup.h"
 #include "VehicleTemperatureFactGroup.h"
+#include "VehicleTiltAngleSetpointFactGroup.h"
+#include "VehicleTiltStatusFactGroup.h"
+#include "VehicleControlSurfaceCmdFactGroup.h"
 #include "VehicleVibrationFactGroup.h"
 #include "VehicleWindFactGroup.h"
 #include "GimbalController.h"
@@ -258,6 +261,9 @@ public:
     Q_PROPERTY(FactGroup*           wind            READ windFactGroup              CONSTANT)
     Q_PROPERTY(FactGroup*           vibration       READ vibrationFactGroup         CONSTANT)
     Q_PROPERTY(FactGroup*           temperature     READ temperatureFactGroup       CONSTANT)
+    Q_PROPERTY(FactGroup*           tiltAngleSetpoint READ tiltAngleSetpointFactGroup CONSTANT)
+    Q_PROPERTY(FactGroup*           tiltStatus      READ tiltStatusFactGroup        CONSTANT)
+    Q_PROPERTY(FactGroup*           controlSurfaceCmd READ controlSurfaceCmdFactGroup CONSTANT)
     Q_PROPERTY(FactGroup*           clock           READ clockFactGroup             CONSTANT)
     Q_PROPERTY(FactGroup*           setpoint        READ setpointFactGroup          CONSTANT)
     Q_PROPERTY(FactGroup*           escStatus       READ escStatusFactGroup         CONSTANT)
@@ -598,6 +604,9 @@ public:
     FactGroup* windFactGroup                () { return &_windFactGroup; }
     FactGroup* vibrationFactGroup           () { return &_vibrationFactGroup; }
     FactGroup* temperatureFactGroup         () { return &_temperatureFactGroup; }
+    FactGroup* tiltAngleSetpointFactGroup   () { return &_tiltAngleSetpointFactGroup; }
+    FactGroup* tiltStatusFactGroup          () { return &_tiltStatusFactGroup; }
+    FactGroup* controlSurfaceCmdFactGroup   () { return &_controlSurfaceCmdFactGroup; }
     FactGroup* clockFactGroup               () { return &_clockFactGroup; }
     FactGroup* setpointFactGroup            () { return &_setpointFactGroup; }
     FactGroup* distanceSensorFactGroup      () { return &_distanceSensorFactGroup; }
@@ -1239,6 +1248,9 @@ private:
     const QString _windFactGroupName =               QStringLiteral("wind");
     const QString _vibrationFactGroupName =          QStringLiteral("vibration");
     const QString _temperatureFactGroupName =        QStringLiteral("temperature");
+    const QString _tiltAngleSetpointFactGroupName =  QStringLiteral("tiltAngleSetpoint");
+    const QString _tiltStatusFactGroupName =         QStringLiteral("tiltStatus");
+    const QString _controlSurfaceCmdFactGroupName =  QStringLiteral("controlSurfaceCmd");
     const QString _clockFactGroupName =              QStringLiteral("clock");
     const QString _setpointFactGroupName =           QStringLiteral("setpoint");
     const QString _distanceSensorFactGroupName =     QStringLiteral("distanceSensor");
@@ -1258,6 +1270,9 @@ private:
     VehicleWindFactGroup            _windFactGroup;
     VehicleVibrationFactGroup       _vibrationFactGroup;
     VehicleTemperatureFactGroup     _temperatureFactGroup;
+    VehicleTiltAngleSetpointFactGroup _tiltAngleSetpointFactGroup;
+    VehicleTiltStatusFactGroup      _tiltStatusFactGroup;
+    VehicleControlSurfaceCmdFactGroup _controlSurfaceCmdFactGroup;
     VehicleClockFactGroup           _clockFactGroup;
     VehicleSetpointFactGroup        _setpointFactGroup;
     VehicleDistanceSensorFactGroup  _distanceSensorFactGroup;

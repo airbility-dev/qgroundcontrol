@@ -6,6 +6,8 @@ target_sources(${CMAKE_PROJECT_NAME}
         VehicleBatteryFactGroup.h
         VehicleClockFactGroup.cc
         VehicleClockFactGroup.h
+        VehicleControlSurfaceCmdFactGroup.cc
+        VehicleControlSurfaceCmdFactGroup.h
         VehicleDistanceSensorFactGroup.cc
         VehicleDistanceSensorFactGroup.h
         VehicleEFIFactGroup.cc
@@ -32,6 +34,10 @@ target_sources(${CMAKE_PROJECT_NAME}
         VehicleSetpointFactGroup.h
         VehicleTemperatureFactGroup.cc
         VehicleTemperatureFactGroup.h
+        VehicleTiltAngleSetpointFactGroup.cc
+        VehicleTiltAngleSetpointFactGroup.h
+        VehicleTiltStatusFactGroup.cc
+        VehicleTiltStatusFactGroup.h
         VehicleVibrationFactGroup.cc
         VehicleVibrationFactGroup.h
         VehicleWindFactGroup.cc
