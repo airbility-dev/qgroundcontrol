@@ -349,6 +349,11 @@ void UDPWorker::connectLink()
         return;
     }
 
+    _socket->setSocketOption(QAbstractSocket::ReceiveBufferSizeSocketOption, 8 * 1024 * 1024);
+    _socket->setSocketOption(QAbstractSocket::SendBufferSizeSocketOption,    8 * 1024 * 1024);
+    qCDebug(UDPLinkLog) << "UDP RCVBUF =" << _socket->socketOption(QAbstractSocket::ReceiveBufferSizeSocketOption).toInt()
+                        << "SNDBUF ="    << _socket->socketOption(QAbstractSocket::SendBufferSizeSocketOption).toInt();
+
     qCDebug(UDPLinkLog) << "Attempting to join multicast group:" << _multicastGroup.toString();
     const bool joinSuccess = _socket->joinMulticastGroup(_multicastGroup);
     if (!joinSuccess) {
