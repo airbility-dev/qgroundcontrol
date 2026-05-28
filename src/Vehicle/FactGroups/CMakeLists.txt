@@ -24,6 +24,8 @@ target_sources(${CMAKE_PROJECT_NAME}
         VehicleGPS2FactGroup.h
         VehicleGPSFactGroup.cc
         VehicleGPSFactGroup.h
+        VehicleLinkStatsFactGroup.cc
+        VehicleLinkStatsFactGroup.h
         VehicleLocalPositionFactGroup.cc
         VehicleLocalPositionFactGroup.h
         VehicleLocalPositionSetpointFactGroup.cc

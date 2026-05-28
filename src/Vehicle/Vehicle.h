@@ -45,6 +45,7 @@
 #include "VehicleTiltAngleSetpointFactGroup.h"
 #include "VehicleTiltStatusFactGroup.h"
 #include "VehicleControlSurfaceCmdFactGroup.h"
+#include "VehicleLinkStatsFactGroup.h"
 #include "VehicleVibrationFactGroup.h"
 #include "VehicleWindFactGroup.h"
 #include "GimbalController.h"
@@ -264,6 +265,7 @@ public:
     Q_PROPERTY(FactGroup*           tiltAngleSetpoint READ tiltAngleSetpointFactGroup CONSTANT)
     Q_PROPERTY(FactGroup*           tiltStatus      READ tiltStatusFactGroup        CONSTANT)
     Q_PROPERTY(FactGroup*           controlSurfaceCmd READ controlSurfaceCmdFactGroup CONSTANT)
+    Q_PROPERTY(FactGroup*           linkStats       READ linkStatsFactGroup         CONSTANT)
     Q_PROPERTY(FactGroup*           clock           READ clockFactGroup             CONSTANT)
     Q_PROPERTY(FactGroup*           setpoint        READ setpointFactGroup          CONSTANT)
     Q_PROPERTY(FactGroup*           escStatus       READ escStatusFactGroup         CONSTANT)
@@ -607,6 +609,7 @@ public:
     FactGroup* tiltAngleSetpointFactGroup   () { return &_tiltAngleSetpointFactGroup; }
     FactGroup* tiltStatusFactGroup          () { return &_tiltStatusFactGroup; }
     FactGroup* controlSurfaceCmdFactGroup   () { return &_controlSurfaceCmdFactGroup; }
+    FactGroup* linkStatsFactGroup           () { return &_linkStatsFactGroup; }
     FactGroup* clockFactGroup               () { return &_clockFactGroup; }
     FactGroup* setpointFactGroup            () { return &_setpointFactGroup; }
     FactGroup* distanceSensorFactGroup      () { return &_distanceSensorFactGroup; }
@@ -1251,6 +1254,7 @@ private:
     const QString _tiltAngleSetpointFactGroupName =  QStringLiteral("tiltAngleSetpoint");
     const QString _tiltStatusFactGroupName =         QStringLiteral("tiltStatus");
     const QString _controlSurfaceCmdFactGroupName =  QStringLiteral("controlSurfaceCmd");
+    const QString _linkStatsFactGroupName =          QStringLiteral("linkStats");
     const QString _clockFactGroupName =              QStringLiteral("clock");
     const QString _setpointFactGroupName =           QStringLiteral("setpoint");
     const QString _distanceSensorFactGroupName =     QStringLiteral("distanceSensor");
@@ -1273,6 +1277,7 @@ private:
     VehicleTiltAngleSetpointFactGroup _tiltAngleSetpointFactGroup;
     VehicleTiltStatusFactGroup      _tiltStatusFactGroup;
     VehicleControlSurfaceCmdFactGroup _controlSurfaceCmdFactGroup;
+    VehicleLinkStatsFactGroup       _linkStatsFactGroup;
     VehicleClockFactGroup           _clockFactGroup;
     VehicleSetpointFactGroup        _setpointFactGroup;
     VehicleDistanceSensorFactGroup  _distanceSensorFactGroup;
