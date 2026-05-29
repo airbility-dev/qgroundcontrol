@@ -41,8 +41,11 @@ option(QGC_ENABLE_GST_VIDEOSTREAMING "Enable GStreamer Video Backend" ON)
 option(QGC_ENABLE_QT_VIDEOSTREAMING "Enable QtMultimedia Video Backend" OFF) # Qt6Multimedia_FOUND
 
 # MAVLink
-set(QGC_MAVLINK_GIT_REPO "file:///C:/Dev/qgc_v508/c_library_v2" CACHE STRING "URL to MAVLink Git Repo")
-set(QGC_MAVLINK_GIT_TAG "develop/for-qgc-v5.0.8" CACHE STRING "Tag of MAVLink Git Repo")
+# Pinned to a commit SHA for reproducible builds (a branch ref would drift as the branch advances).
+# SHA below is the tip of branch 'develop/for-qgc-v5.0.8' on airbility-dev/c_library_v2 as of 2026-05-29
+# (contains custom messages TILT_ANGLE_SETPOINT 513 / TILT_STATUS 514 / CONTROL_SURFACE_CMD 515).
+set(QGC_MAVLINK_GIT_REPO "https://github.com/airbility-dev/c_library_v2" CACHE STRING "URL to MAVLink Git Repo")
+set(QGC_MAVLINK_GIT_TAG "9e777289737237ac6a8307880b805771252b05bb" CACHE STRING "Tag of MAVLink Git Repo") # branch: develop/for-qgc-v5.0.8
 
 # APM
 option(QGC_DISABLE_APM_MAVLINK "Disable APM Dialect" OFF)
