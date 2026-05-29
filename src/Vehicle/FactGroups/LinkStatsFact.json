@@ -7,6 +7,7 @@
 { "name": "receiveRate",       "shortDesc": "Valid receive rate",        "type": "float",  "decimalPlaces": 1, "units": "Hz" },
 { "name": "messageRate",       "shortDesc": "Total message rate (sent)", "type": "float",  "decimalPlaces": 1, "units": "Hz" },
 { "name": "lossPercent",       "shortDesc": "Loss percent (1s window)",  "type": "float",  "decimalPlaces": 1, "units": "%" },
-{ "name": "lossPerSec",        "shortDesc": "Loss per second",           "type": "float",  "decimalPlaces": 1, "units": "/s" }
+{ "name": "lossPerSec",        "shortDesc": "Loss per second",           "type": "float",  "decimalPlaces": 1, "units": "/s" },
+{ "name": "crcDropPerSec",     "shortDesc": "CRC fail per second",       "type": "float",  "decimalPlaces": 1, "units": "/s" }
 ]
 }

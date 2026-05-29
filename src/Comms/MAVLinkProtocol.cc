@@ -74,9 +74,19 @@ void MAVLinkProtocol::resetMetadataForLink(LinkInterface *link)
     const uint8_t channel = link->mavlinkChannel();
     _totalReceiveCounter[channel] = 0;
     _totalLossCounter[channel] = 0;
+    _totalCrcDropCounter[channel] = 0;
     _runningLossPercent[channel] = 0.f;
 
     link->setDecodedFirstMavlinkPacket(false);
+}
+
+uint64_t MAVLinkProtocol::totalCrcDropCount() const
+{
+    uint64_t sum = 0;
+    for (int ch = 0; ch < MAVLINK_COMM_NUM_BUFFERS; ++ch) {
+        sum += _totalCrcDropCounter[ch];
+    }
+    return sum;
 }
 
 void MAVLinkProtocol::logSentBytes(const LinkInterface *link, const QByteArray &data)
@@ -115,7 +125,12 @@ void MAVLinkProtocol::receiveBytes(LinkInterface *link, const QByteArray &data)
         mavlink_message_t message{};
         mavlink_status_t status{};
 
-        if (mavlink_parse_char(mavlinkChannel, byte, &message, &status) != MAVLINK_FRAMING_OK) {
+        const int parseResult = mavlink_parse_char(mavlinkChannel, byte, &message, &status);
+        // c_library_v2 stuffs status->packet_rx_drop_count with this call's parse_error
+        // (CRC mismatch, framing error, length mismatch). Accumulate to track "arrived but corrupt"
+        // separately from "never arrived" (latter is inferred via seq-gap loss).
+        _totalCrcDropCounter[mavlinkChannel] += status.packet_rx_drop_count;
+        if (parseResult != MAVLINK_FRAMING_OK) {
             continue;
         }
 

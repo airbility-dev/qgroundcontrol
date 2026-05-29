@@ -397,6 +397,13 @@ Item {
                     color:               (tiltOverlay._ls && tiltOverlay._ls.lossPerSec.rawValue > 0) ? "#FF5050" : "white"
                     text:                tiltOverlay._ls ? tiltOverlay._ls.lossPerSec.valueString : "—"
                 }
+                QGCLabel { text: qsTr("crc fail/s");    color: "white" }
+                QGCLabel {
+                    Layout.fillWidth:    true
+                    horizontalAlignment: Text.AlignRight
+                    color:               (tiltOverlay._ls && tiltOverlay._ls.crcDropPerSec.rawValue > 0) ? "#FF5050" : "white"
+                    text:                tiltOverlay._ls ? tiltOverlay._ls.crcDropPerSec.valueString : "—"
+                }
             }
             }
         }

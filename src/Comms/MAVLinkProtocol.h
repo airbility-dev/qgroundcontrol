@@ -60,6 +60,11 @@ public:
     /// Reset the counters for all metadata for this link.
     void resetMetadataForLink(LinkInterface *link);
 
+    /// Total parser-level CRC/framing errors across all MAVLink channels.
+    /// Distinguishes "bytes arrived but corrupt" (this counter) from "bytes never arrived"
+    /// (= total seq-gap loss - this counter). Both categories also contribute to seq-gap loss.
+    uint64_t totalCrcDropCount() const;
+
     /// Suspend/Restart logging during replay.
     void suspendLogForReplay(bool suspend) { _logSuspendReplay = suspend; }
 
@@ -122,6 +127,7 @@ private:
     QSet<QPair<uint8_t,uint8_t>> _firstMessageSeen;
     uint64_t _totalReceiveCounter[MAVLINK_COMM_NUM_BUFFERS]{};  ///< The total number of successfully received messages
     uint64_t _totalLossCounter[MAVLINK_COMM_NUM_BUFFERS]{};     ///< Total messages lost during transmission.
+    uint64_t _totalCrcDropCounter[MAVLINK_COMM_NUM_BUFFERS]{};  ///< Parser-level CRC/framing errors (= bytes arrived but corrupt). Subset of _totalLossCounter.
     float _runningLossPercent[MAVLINK_COMM_NUM_BUFFERS]{};      ///< Loss rate
 
     unsigned _currentVersion = 100;

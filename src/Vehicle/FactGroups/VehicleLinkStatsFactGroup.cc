@@ -16,6 +16,7 @@
 #include <QtCore/qmath.h>
 
 #include "AppSettings.h"
+#include "MAVLinkProtocol.h"
 #include "SettingsManager.h"
 #include "Vehicle.h"
 
@@ -29,12 +30,14 @@ VehicleLinkStatsFactGroup::VehicleLinkStatsFactGroup(QObject *parent)
     _addFact(&_messageRateFact);
     _addFact(&_lossPercentFact);
     _addFact(&_lossPerSecFact);
+    _addFact(&_crcDropPerSecFact);
 
     _msSinceLastPacketFact.setRawValue(0u);
     _receiveRateFact.setRawValue(0.0f);
     _messageRateFact.setRawValue(0.0f);
     _lossPercentFact.setRawValue(0.0f);
     _lossPerSecFact.setRawValue(0.0f);
+    _crcDropPerSecFact.setRawValue(0.0f);
 
     connect(&_updateTimer, &QTimer::timeout, this, &VehicleLinkStatsFactGroup::_periodicUpdate);
     _updateTimer.start(100);
@@ -105,7 +108,26 @@ void VehicleLinkStatsFactGroup::_periodicUpdate()
         const float messageRate = receiveRate + lossPerSec;
         _messageRateFact.setRawValue(messageRate);
 
-        _writeCsvRow(receiveRate, messageRate, windowLossPct, lossPerSec);
+        // CRC/parse-error rate: MAVLinkProtocol accumulates status.packet_rx_drop_count
+        // (= per-call parse_error from c_library_v2) across all channels. This counts
+        // "bytes arrived at QGC but corrupt at MAVLink layer" — a subset of total seq-gap loss.
+        // The remaining seq-gap loss (loss_per_sec - crc_drops_per_sec) is "wire-level loss"
+        // (bytes never arrived; dropped by radio, OS UDP buffer overflow, etc.).
+        const uint64_t currentCrcSum = MAVLinkProtocol::instance()->totalCrcDropCount();
+        float crcDropPerSec = 0.0f;
+        if (!_haveCrcBaseline) {
+            _prevCrcDropSum = currentCrcSum;
+            _haveCrcBaseline = true;
+        } else {
+            const uint64_t deltaCrc = currentCrcSum >= _prevCrcDropSum
+                ? currentCrcSum - _prevCrcDropSum
+                : 0;
+            crcDropPerSec = static_cast<float>(deltaCrc) * 1000.0f / static_cast<float>(elapsedMs);
+            _prevCrcDropSum = currentCrcSum;
+        }
+        _crcDropPerSecFact.setRawValue(crcDropPerSec);
+
+        _writeCsvRow(receiveRate, messageRate, windowLossPct, lossPerSec, crcDropPerSec);
 
         _rateWindowTimer.restart();
     }
@@ -143,7 +165,7 @@ void VehicleLinkStatsFactGroup::_openCsvIfNeeded()
     if (_csvFile.size() == 0) {
         QTextStream header(&_csvFile);
         header << "qgc_timestamp,drone_time_boot_ms,ms_since_last,valid_rate,msg_rate,"
-                  "loss_pct,loss_per_sec,distance_to_home_m\n";
+                  "loss_pct,loss_per_sec,crc_drops_per_sec,distance_to_home_m\n";
         header.flush();
         _csvFile.flush();
     }
@@ -151,7 +173,7 @@ void VehicleLinkStatsFactGroup::_openCsvIfNeeded()
     qCDebug(linkStatsLog) << "link_quality CSV opened:" << _csvFile.fileName();
 }
 
-void VehicleLinkStatsFactGroup::_writeCsvRow(float receiveRate, float messageRate, float lossPercent, float lossPerSec)
+void VehicleLinkStatsFactGroup::_writeCsvRow(float receiveRate, float messageRate, float lossPercent, float lossPerSec, float crcDropPerSec)
 {
     _openCsvIfNeeded();
     if (!_csvFile.isOpen()) {
@@ -176,10 +198,11 @@ void VehicleLinkStatsFactGroup::_writeCsvRow(float receiveRate, float messageRat
     stream << qgcTimestamp << ','
            << droneTimeCell << ','
            << msSinceLast << ','
-           << QString::number(receiveRate,  'f', 1) << ','
-           << QString::number(messageRate,  'f', 1) << ','
-           << QString::number(lossPercent,  'f', 1) << ','
-           << QString::number(lossPerSec,   'f', 1) << ','
+           << QString::number(receiveRate,    'f', 1) << ','
+           << QString::number(messageRate,    'f', 1) << ','
+           << QString::number(lossPercent,    'f', 1) << ','
+           << QString::number(lossPerSec,     'f', 1) << ','
+           << QString::number(crcDropPerSec,  'f', 1) << ','
            << distanceCell << '\n';
     stream.flush();
     _csvFile.flush();   // push to OS kernel buffer for crash safety
