@@ -10,6 +10,19 @@
 #include "VehicleTiltAngleSetpointFactGroup.h"
 #include "Vehicle.h"
 
+#include <cmath>
+
+namespace {
+// Firmware fills in a large dummy value (~1e8+) when a real reading is unavailable.
+// Map those (and any non-finite input) to NaN so float Facts render as QGC's standard
+// "--.--" instead of a huge number that stretches the FlyView overlay over the map.
+constexpr float kAirbilityInvalidThreshold = 1.0e8f;
+inline float sanitizeF(float v)
+{
+    return (std::isfinite(v) && (std::fabs(v) < kAirbilityInvalidThreshold)) ? v : qQNaN();
+}
+}
+
 VehicleTiltAngleSetpointFactGroup::VehicleTiltAngleSetpointFactGroup(QObject *parent)
     : FactGroup(1000, QStringLiteral(":/json/Vehicle/TiltAngleSetpointFact.json"), parent)
 {
@@ -35,10 +48,10 @@ void VehicleTiltAngleSetpointFactGroup::handleMessage(Vehicle *vehicle, const ma
     mavlink_tilt_angle_setpoint_t setpoint{};
     mavlink_msg_tilt_angle_setpoint_decode(&message, &setpoint);
 
-    _tiltFlFact.setRawValue(setpoint.tilt_fl);
-    _tiltFrFact.setRawValue(setpoint.tilt_fr);
-    _tiltRlFact.setRawValue(setpoint.tilt_rl);
-    _tiltRrFact.setRawValue(setpoint.tilt_rr);
+    _tiltFlFact.setRawValue(sanitizeF(setpoint.tilt_fl));
+    _tiltFrFact.setRawValue(sanitizeF(setpoint.tilt_fr));
+    _tiltRlFact.setRawValue(sanitizeF(setpoint.tilt_rl));
+    _tiltRrFact.setRawValue(sanitizeF(setpoint.tilt_rr));
 
     _setTelemetryAvailable(true);
 }

@@ -10,6 +10,19 @@
 #include "VehicleControlSurfaceCmdFactGroup.h"
 #include "Vehicle.h"
 
+#include <cmath>
+
+namespace {
+// Firmware fills in a large dummy value (~1e8+) when a real reading is unavailable.
+// Map those (and any non-finite input) to NaN so float Facts render as QGC's standard
+// "--.--" instead of a huge number that stretches the FlyView overlay over the map.
+constexpr float kAirbilityInvalidThreshold = 1.0e8f;
+inline float sanitizeF(float v)
+{
+    return (std::isfinite(v) && (std::fabs(v) < kAirbilityInvalidThreshold)) ? v : qQNaN();
+}
+}
+
 VehicleControlSurfaceCmdFactGroup::VehicleControlSurfaceCmdFactGroup(QObject *parent)
     : FactGroup(1000, QStringLiteral(":/json/Vehicle/ControlSurfaceCmdFact.json"), parent)
 {
@@ -35,10 +48,10 @@ void VehicleControlSurfaceCmdFactGroup::handleMessage(Vehicle *vehicle, const ma
     mavlink_control_surface_cmd_t cmd{};
     mavlink_msg_control_surface_cmd_decode(&message, &cmd);
 
-    _leftAileronFact.setRawValue(cmd.left_aileron);
-    _rightAileronFact.setRawValue(cmd.right_aileron);
-    _leftRuddervatorFact.setRawValue(cmd.left_ruddervator);
-    _rightRuddervatorFact.setRawValue(cmd.right_ruddervator);
+    _leftAileronFact.setRawValue(sanitizeF(cmd.left_aileron));
+    _rightAileronFact.setRawValue(sanitizeF(cmd.right_aileron));
+    _leftRuddervatorFact.setRawValue(sanitizeF(cmd.left_ruddervator));
+    _rightRuddervatorFact.setRawValue(sanitizeF(cmd.right_ruddervator));
 
     _setTelemetryAvailable(true);
 }

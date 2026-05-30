@@ -16,6 +16,7 @@ import QtLocation
 import QtPositioning
 import QtQuick.Window
 import QtQml.Models
+import QtCore
 
 import QGroundControl
 import QGroundControl.Controls
@@ -59,6 +60,16 @@ Item {
         sequence:   "Ctrl+Shift+T"
         context:    Qt.ApplicationShortcut
         onActivated: _root._tiltOverlayVisible = !_root._tiltOverlayVisible
+    }
+
+    //-- Value cell for the Airbility debug overlay. Caps width + elides so a stray long
+    //   value (e.g. an unsanitized sentinel) can never stretch the panel over the map.
+    component TiltValue: QGCLabel {
+        Layout.fillWidth:    true
+        Layout.maximumWidth: ScreenTools.defaultFontPixelWidth * 8
+        horizontalAlignment: Text.AlignRight
+        elide:               Text.ElideRight
+        color:               "white"
     }
 
     QGCToolInsets {
@@ -224,8 +235,18 @@ Item {
     //-- Airbility Tilt / Control Surface debug overlay (collapsible header, draggable)
     Rectangle {
         id:                     tiltOverlay
-        width:                  tiltOverlayColumn.implicitWidth + ScreenTools.defaultFontPixelWidth * 2
-        height:                 tiltOverlayColumn.implicitHeight + ScreenTools.defaultFontPixelHeight
+        // User-resizable: width/height track these backing properties (mutated by the
+        // resize grip / restored from Settings), so the panel no longer auto-resizes
+        // as value text lengths change.
+        property real _panelWidth:  ScreenTools.defaultFontPixelWidth  * 42
+        property real _panelHeight: ScreenTools.defaultFontPixelHeight * 26
+        readonly property real _minWidth:  ScreenTools.defaultFontPixelWidth  * 20
+        readonly property real _minHeight: ScreenTools.defaultFontPixelHeight * 7
+        readonly property real _headerH:   tiltOverlayHeader.implicitHeight + ScreenTools.defaultFontPixelHeight
+
+        width:                  _panelWidth
+        height:                 _root._tiltOverlayVisible ? _panelHeight : _headerH
+        clip:                   true
         color:                  "#A0000000"
         radius:                 ScreenTools.defaultFontPixelWidth / 2
         visible:                _activeVehicle
@@ -236,14 +257,49 @@ Item {
         property var _csc: _activeVehicle ? _activeVehicle.controlSurfaceCmd : null
         property var _ls:  _activeVehicle ? _activeVehicle.linkStats         : null
 
+        //-- Persist size + position across restarts (debounced).
+        Settings {
+            id:         tiltOverlaySettings
+            category:   "AirbilityTiltOverlay"
+            property real savedX: -1
+            property real savedY: -1
+            property real savedW: -1
+            property real savedH: -1
+        }
+
+        Timer {
+            id:         saveOverlayTimer
+            interval:   500
+            repeat:     false
+            onTriggered: {
+                tiltOverlaySettings.savedX = tiltOverlay.x
+                tiltOverlaySettings.savedY = tiltOverlay.y
+                tiltOverlaySettings.savedW = tiltOverlay._panelWidth
+                tiltOverlaySettings.savedH = tiltOverlay._panelHeight
+            }
+        }
+
+        onXChanged: saveOverlayTimer.restart()
+        onYChanged: saveOverlayTimer.restart()
+
         Component.onCompleted: {
-            x = toolStrip.x + toolStrip.width + _toolsMargin * 2
-            y = Math.max(_toolsMargin, (parent.height - height) / 2)
+            if (tiltOverlaySettings.savedW > 0 && tiltOverlaySettings.savedH > 0) {
+                _panelWidth  = Math.max(_minWidth,  Math.min(tiltOverlaySettings.savedW, parent.width))
+                _panelHeight = Math.max(_minHeight, Math.min(tiltOverlaySettings.savedH, parent.height))
+                x = Math.max(0, Math.min(tiltOverlaySettings.savedX, parent.width  - _panelWidth))
+                y = Math.max(0, Math.min(tiltOverlaySettings.savedY, parent.height - _panelHeight))
+            } else {
+                // First run: size to content height (rows are always present, so this is stable).
+                _panelHeight = tiltOverlayContent.implicitHeight + _headerH + ScreenTools.defaultFontPixelHeight * 2
+                x = toolStrip.x + toolStrip.width + _toolsMargin * 2
+                y = Math.max(_toolsMargin, (parent.height - height) / 2)
+            }
         }
 
         ColumnLayout {
             id:                 tiltOverlayColumn
-            anchors.centerIn:   parent
+            anchors.fill:       parent
+            anchors.margins:    ScreenTools.defaultFontPixelWidth
             spacing:            ScreenTools.defaultFontPixelHeight / 4
 
             //-- Header: drag to move, click to expand/collapse
@@ -284,14 +340,23 @@ Item {
                 }
             }
 
-            //-- Collapsible content (Tilt Status / Setpoint / Control Surface)
-            ColumnLayout {
+            //-- Collapsible content (Tilt Status / Setpoint / Control Surface / Link Quality), scrollable
+            QGCFlickable {
+                id:                 tiltOverlayFlick
+                Layout.fillWidth:   true
+                Layout.fillHeight:  true
+                visible:            _root._tiltOverlayVisible
+                contentWidth:       width
+                contentHeight:      tiltOverlayContent.height
+
+                ColumnLayout {
                 id:             tiltOverlayContent
-                visible:        _root._tiltOverlayVisible
+                width:          tiltOverlayFlick.width
                 spacing:        ScreenTools.defaultFontPixelHeight / 4
 
                 QGCLabel { text: qsTr("Tilt Status"); color: "#FFD700"; font.bold: true }
             GridLayout {
+                Layout.fillWidth: true
                 columns:        5
                 columnSpacing:  ScreenTools.defaultFontPixelWidth
                 rowSpacing:     2
@@ -303,108 +368,150 @@ Item {
                 QGCLabel { text: "RR"; color: "#AAAAAA"; horizontalAlignment: Text.AlignRight; Layout.fillWidth: true }
 
                 QGCLabel { text: qsTr("angle");   color: "white" }
-                QGCLabel { color: "white"; horizontalAlignment: Text.AlignRight; Layout.fillWidth: true; text: tiltOverlay._ts ? tiltOverlay._ts.angleFl.valueString : "—" }
-                QGCLabel { color: "white"; horizontalAlignment: Text.AlignRight; Layout.fillWidth: true; text: tiltOverlay._ts ? tiltOverlay._ts.angleFr.valueString : "—" }
-                QGCLabel { color: "white"; horizontalAlignment: Text.AlignRight; Layout.fillWidth: true; text: tiltOverlay._ts ? tiltOverlay._ts.angleRl.valueString : "—" }
-                QGCLabel { color: "white"; horizontalAlignment: Text.AlignRight; Layout.fillWidth: true; text: tiltOverlay._ts ? tiltOverlay._ts.angleRr.valueString : "—" }
+                TiltValue { text: tiltOverlay._ts ? tiltOverlay._ts.angleFl.valueString : "—" }
+                TiltValue { text: tiltOverlay._ts ? tiltOverlay._ts.angleFr.valueString : "—" }
+                TiltValue { text: tiltOverlay._ts ? tiltOverlay._ts.angleRl.valueString : "—" }
+                TiltValue { text: tiltOverlay._ts ? tiltOverlay._ts.angleRr.valueString : "—" }
 
                 QGCLabel { text: qsTr("ang.vel"); color: "white" }
-                QGCLabel { color: "white"; horizontalAlignment: Text.AlignRight; Layout.fillWidth: true; text: tiltOverlay._ts ? tiltOverlay._ts.angularVelFl.valueString : "—" }
-                QGCLabel { color: "white"; horizontalAlignment: Text.AlignRight; Layout.fillWidth: true; text: tiltOverlay._ts ? tiltOverlay._ts.angularVelFr.valueString : "—" }
-                QGCLabel { color: "white"; horizontalAlignment: Text.AlignRight; Layout.fillWidth: true; text: tiltOverlay._ts ? tiltOverlay._ts.angularVelRl.valueString : "—" }
-                QGCLabel { color: "white"; horizontalAlignment: Text.AlignRight; Layout.fillWidth: true; text: tiltOverlay._ts ? tiltOverlay._ts.angularVelRr.valueString : "—" }
+                TiltValue { text: tiltOverlay._ts ? tiltOverlay._ts.angularVelFl.valueString : "—" }
+                TiltValue { text: tiltOverlay._ts ? tiltOverlay._ts.angularVelFr.valueString : "—" }
+                TiltValue { text: tiltOverlay._ts ? tiltOverlay._ts.angularVelRl.valueString : "—" }
+                TiltValue { text: tiltOverlay._ts ? tiltOverlay._ts.angularVelRr.valueString : "—" }
 
                 QGCLabel { text: qsTr("voltage"); color: "white" }
-                QGCLabel { color: "white"; horizontalAlignment: Text.AlignRight; Layout.fillWidth: true; text: tiltOverlay._ts ? tiltOverlay._ts.voltageFl.valueString : "—" }
-                QGCLabel { color: "white"; horizontalAlignment: Text.AlignRight; Layout.fillWidth: true; text: tiltOverlay._ts ? tiltOverlay._ts.voltageFr.valueString : "—" }
-                QGCLabel { color: "white"; horizontalAlignment: Text.AlignRight; Layout.fillWidth: true; text: tiltOverlay._ts ? tiltOverlay._ts.voltageRl.valueString : "—" }
-                QGCLabel { color: "white"; horizontalAlignment: Text.AlignRight; Layout.fillWidth: true; text: tiltOverlay._ts ? tiltOverlay._ts.voltageRr.valueString : "—" }
+                TiltValue { text: tiltOverlay._ts ? tiltOverlay._ts.voltageFl.valueString : "—" }
+                TiltValue { text: tiltOverlay._ts ? tiltOverlay._ts.voltageFr.valueString : "—" }
+                TiltValue { text: tiltOverlay._ts ? tiltOverlay._ts.voltageRl.valueString : "—" }
+                TiltValue { text: tiltOverlay._ts ? tiltOverlay._ts.voltageRr.valueString : "—" }
 
                 QGCLabel { text: qsTr("temp");    color: "white" }
-                QGCLabel { color: "white"; horizontalAlignment: Text.AlignRight; Layout.fillWidth: true; text: tiltOverlay._ts ? tiltOverlay._ts.temperatureFl.valueString : "—" }
-                QGCLabel { color: "white"; horizontalAlignment: Text.AlignRight; Layout.fillWidth: true; text: tiltOverlay._ts ? tiltOverlay._ts.temperatureFr.valueString : "—" }
-                QGCLabel { color: "white"; horizontalAlignment: Text.AlignRight; Layout.fillWidth: true; text: tiltOverlay._ts ? tiltOverlay._ts.temperatureRl.valueString : "—" }
-                QGCLabel { color: "white"; horizontalAlignment: Text.AlignRight; Layout.fillWidth: true; text: tiltOverlay._ts ? tiltOverlay._ts.temperatureRr.valueString : "—" }
+                TiltValue { text: tiltOverlay._ts ? tiltOverlay._ts.temperatureFl.valueString : "—" }
+                TiltValue { text: tiltOverlay._ts ? tiltOverlay._ts.temperatureFr.valueString : "—" }
+                TiltValue { text: tiltOverlay._ts ? tiltOverlay._ts.temperatureRl.valueString : "—" }
+                TiltValue { text: tiltOverlay._ts ? tiltOverlay._ts.temperatureRr.valueString : "—" }
             }
 
             QGCLabel { text: qsTr("Tilt Setpoint"); color: "#FFD700"; font.bold: true }
             GridLayout {
+                Layout.fillWidth: true
                 columns:        5
                 columnSpacing:  ScreenTools.defaultFontPixelWidth
                 rowSpacing:     2
 
                 QGCLabel { text: qsTr("angle"); color: "white" }
-                QGCLabel { color: "white"; horizontalAlignment: Text.AlignRight; Layout.fillWidth: true; text: tiltOverlay._tsp ? tiltOverlay._tsp.tiltFl.valueString : "—" }
-                QGCLabel { color: "white"; horizontalAlignment: Text.AlignRight; Layout.fillWidth: true; text: tiltOverlay._tsp ? tiltOverlay._tsp.tiltFr.valueString : "—" }
-                QGCLabel { color: "white"; horizontalAlignment: Text.AlignRight; Layout.fillWidth: true; text: tiltOverlay._tsp ? tiltOverlay._tsp.tiltRl.valueString : "—" }
-                QGCLabel { color: "white"; horizontalAlignment: Text.AlignRight; Layout.fillWidth: true; text: tiltOverlay._tsp ? tiltOverlay._tsp.tiltRr.valueString : "—" }
+                TiltValue { text: tiltOverlay._tsp ? tiltOverlay._tsp.tiltFl.valueString : "—" }
+                TiltValue { text: tiltOverlay._tsp ? tiltOverlay._tsp.tiltFr.valueString : "—" }
+                TiltValue { text: tiltOverlay._tsp ? tiltOverlay._tsp.tiltRl.valueString : "—" }
+                TiltValue { text: tiltOverlay._tsp ? tiltOverlay._tsp.tiltRr.valueString : "—" }
             }
 
             QGCLabel { text: qsTr("Control Surface"); color: "#FFD700"; font.bold: true }
             GridLayout {
+                Layout.fillWidth: true
                 columns:        2
                 columnSpacing:  ScreenTools.defaultFontPixelWidth
                 rowSpacing:     2
 
                 QGCLabel { text: qsTr("L.Aileron");  color: "white" }
-                QGCLabel { color: "white"; horizontalAlignment: Text.AlignRight; Layout.fillWidth: true; text: tiltOverlay._csc ? tiltOverlay._csc.leftAileron.valueString : "—" }
+                TiltValue { text: tiltOverlay._csc ? tiltOverlay._csc.leftAileron.valueString : "—" }
                 QGCLabel { text: qsTr("R.Aileron");  color: "white" }
-                QGCLabel { color: "white"; horizontalAlignment: Text.AlignRight; Layout.fillWidth: true; text: tiltOverlay._csc ? tiltOverlay._csc.rightAileron.valueString : "—" }
+                TiltValue { text: tiltOverlay._csc ? tiltOverlay._csc.rightAileron.valueString : "—" }
                 QGCLabel { text: qsTr("L.Rudder");   color: "white" }
-                QGCLabel { color: "white"; horizontalAlignment: Text.AlignRight; Layout.fillWidth: true; text: tiltOverlay._csc ? tiltOverlay._csc.leftRuddervator.valueString : "—" }
+                TiltValue { text: tiltOverlay._csc ? tiltOverlay._csc.leftRuddervator.valueString : "—" }
                 QGCLabel { text: qsTr("R.Rudder");   color: "white" }
-                QGCLabel { color: "white"; horizontalAlignment: Text.AlignRight; Layout.fillWidth: true; text: tiltOverlay._csc ? tiltOverlay._csc.rightRuddervator.valueString : "—" }
+                TiltValue { text: tiltOverlay._csc ? tiltOverlay._csc.rightRuddervator.valueString : "—" }
             }
 
             QGCLabel { text: qsTr("Link Quality"); color: "#FFD700"; font.bold: true }
             GridLayout {
+                Layout.fillWidth: true
                 columns:        2
                 columnSpacing:  ScreenTools.defaultFontPixelWidth
                 rowSpacing:     2
 
                 QGCLabel { text: qsTr("ms since last"); color: "white" }
-                QGCLabel {
-                    Layout.fillWidth:    true
-                    horizontalAlignment: Text.AlignRight
-                    color:               (tiltOverlay._ls && tiltOverlay._ls.msSinceLastPacket.rawValue > 1000) ? "#FF5050" : "white"
-                    text:                tiltOverlay._ls ? tiltOverlay._ls.msSinceLastPacket.valueString : "—"
+                TiltValue {
+                    color: (tiltOverlay._ls && tiltOverlay._ls.msSinceLastPacket.rawValue > 1000) ? "#FF5050" : "white"
+                    text:  tiltOverlay._ls ? tiltOverlay._ls.msSinceLastPacket.valueString : "—"
                 }
                 QGCLabel { text: qsTr("valid rate");    color: "white" }
-                QGCLabel {
-                    Layout.fillWidth:    true
-                    horizontalAlignment: Text.AlignRight
-                    color:               "white"
-                    text:                tiltOverlay._ls ? tiltOverlay._ls.receiveRate.valueString : "—"
-                }
+                TiltValue { text: tiltOverlay._ls ? tiltOverlay._ls.receiveRate.valueString : "—" }
                 QGCLabel { text: qsTr("msg rate");      color: "white" }
-                QGCLabel {
-                    Layout.fillWidth:    true
-                    horizontalAlignment: Text.AlignRight
-                    color:               "white"
-                    text:                tiltOverlay._ls ? tiltOverlay._ls.messageRate.valueString : "—"
-                }
+                TiltValue { text: tiltOverlay._ls ? tiltOverlay._ls.messageRate.valueString : "—" }
                 QGCLabel { text: qsTr("loss %");        color: "white" }
-                QGCLabel {
-                    Layout.fillWidth:    true
-                    horizontalAlignment: Text.AlignRight
-                    color:               (tiltOverlay._ls && tiltOverlay._ls.lossPercent.rawValue > 5) ? "#FF5050" : "white"
-                    text:                tiltOverlay._ls ? tiltOverlay._ls.lossPercent.valueString : "—"
+                TiltValue {
+                    color: (tiltOverlay._ls && tiltOverlay._ls.lossPercent.rawValue > 5) ? "#FF5050" : "white"
+                    text:  tiltOverlay._ls ? tiltOverlay._ls.lossPercent.valueString : "—"
                 }
                 QGCLabel { text: qsTr("loss/s");        color: "white" }
-                QGCLabel {
-                    Layout.fillWidth:    true
-                    horizontalAlignment: Text.AlignRight
-                    color:               (tiltOverlay._ls && tiltOverlay._ls.lossPerSec.rawValue > 0) ? "#FF5050" : "white"
-                    text:                tiltOverlay._ls ? tiltOverlay._ls.lossPerSec.valueString : "—"
+                TiltValue {
+                    color: (tiltOverlay._ls && tiltOverlay._ls.lossPerSec.rawValue > 0) ? "#FF5050" : "white"
+                    text:  tiltOverlay._ls ? tiltOverlay._ls.lossPerSec.valueString : "—"
                 }
                 QGCLabel { text: qsTr("crc fail/s");    color: "white" }
-                QGCLabel {
-                    Layout.fillWidth:    true
-                    horizontalAlignment: Text.AlignRight
-                    color:               (tiltOverlay._ls && tiltOverlay._ls.crcDropPerSec.rawValue > 0) ? "#FF5050" : "white"
-                    text:                tiltOverlay._ls ? tiltOverlay._ls.crcDropPerSec.valueString : "—"
+                TiltValue {
+                    color: (tiltOverlay._ls && tiltOverlay._ls.crcDropPerSec.rawValue > 0) ? "#FF5050" : "white"
+                    text:  tiltOverlay._ls ? tiltOverlay._ls.crcDropPerSec.valueString : "—"
                 }
             }
+            }
+            }
+        }
+
+        //-- Bottom-right resize grip (drag to resize width + height)
+        Rectangle {
+            id:             resizeGrip
+            width:          ScreenTools.defaultFontPixelHeight
+            height:         ScreenTools.defaultFontPixelHeight
+            anchors.right:  parent.right
+            anchors.bottom: parent.bottom
+            color:          "transparent"
+            visible:        _root._tiltOverlayVisible
+            z:              10
+
+            Canvas {
+                anchors.fill: parent
+                onPaint: {
+                    var ctx = getContext("2d")
+                    ctx.reset()
+                    ctx.strokeStyle = "#C0FFFFFF"
+                    ctx.lineWidth   = 1
+                    var mn = Math.min(width, height)
+                    for (var i = 1; i <= 3; ++i) {
+                        var d = i * (mn / 4)
+                        ctx.beginPath()
+                        ctx.moveTo(width - d, height)
+                        ctx.lineTo(width, height - d)
+                        ctx.stroke()
+                    }
+                }
+            }
+
+            MouseArea {
+                anchors.fill:    parent
+                cursorShape:     Qt.SizeFDiagCursor
+                preventStealing: true
+                property real startX: 0
+                property real startY: 0
+                property real startW: 0
+                property real startH: 0
+                onPressed: (mouse) => {
+                    startX = mouse.x
+                    startY = mouse.y
+                    startW = tiltOverlay._panelWidth
+                    startH = tiltOverlay._panelHeight
+                }
+                onPositionChanged: (mouse) => {
+                    if (!pressed) {
+                        return
+                    }
+                    var maxW = tiltOverlay.parent.width  - tiltOverlay.x
+                    var maxH = tiltOverlay.parent.height - tiltOverlay.y
+                    tiltOverlay._panelWidth  = Math.max(tiltOverlay._minWidth,  Math.min(startW + (mouse.x - startX), maxW))
+                    tiltOverlay._panelHeight = Math.max(tiltOverlay._minHeight, Math.min(startH + (mouse.y - startY), maxH))
+                    saveOverlayTimer.restart()
+                }
             }
         }
     }

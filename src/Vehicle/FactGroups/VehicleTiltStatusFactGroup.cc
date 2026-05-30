@@ -10,6 +10,20 @@
 #include "VehicleTiltStatusFactGroup.h"
 #include "Vehicle.h"
 
+#include <cmath>
+
+namespace {
+// Firmware fills in a large dummy value (~1e8+) when a real reading is unavailable.
+// Map those (and any non-finite input) to NaN so float Facts render as QGC's standard
+// "--.--" instead of a huge number that stretches the FlyView overlay over the map.
+// Same sentinel->qQNaN() convention used by VehicleGPSFactGroup / VehicleGeneratorFactGroup.
+constexpr float kAirbilityInvalidThreshold = 1.0e8f;
+inline float sanitizeF(float v)
+{
+    return (std::isfinite(v) && (std::fabs(v) < kAirbilityInvalidThreshold)) ? v : qQNaN();
+}
+}
+
 VehicleTiltStatusFactGroup::VehicleTiltStatusFactGroup(QObject *parent)
     : FactGroup(1000, QStringLiteral(":/json/Vehicle/TiltStatusFact.json"), parent)
 {
@@ -82,30 +96,31 @@ void VehicleTiltStatusFactGroup::handleMessage(Vehicle *vehicle, const mavlink_m
     _errorStatusRlFact.setRawValue(status.error_status[2]);
     _errorStatusRrFact.setRawValue(status.error_status[3]);
 
-    _angleFlFact.setRawValue(status.angle[0]);
-    _angleFrFact.setRawValue(status.angle[1]);
-    _angleRlFact.setRawValue(status.angle[2]);
-    _angleRrFact.setRawValue(status.angle[3]);
+    _angleFlFact.setRawValue(sanitizeF(status.angle[0]));
+    _angleFrFact.setRawValue(sanitizeF(status.angle[1]));
+    _angleRlFact.setRawValue(sanitizeF(status.angle[2]));
+    _angleRrFact.setRawValue(sanitizeF(status.angle[3]));
 
-    _angularVelFlFact.setRawValue(status.angular_vel[0]);
-    _angularVelFrFact.setRawValue(status.angular_vel[1]);
-    _angularVelRlFact.setRawValue(status.angular_vel[2]);
-    _angularVelRrFact.setRawValue(status.angular_vel[3]);
+    _angularVelFlFact.setRawValue(sanitizeF(status.angular_vel[0]));
+    _angularVelFrFact.setRawValue(sanitizeF(status.angular_vel[1]));
+    _angularVelRlFact.setRawValue(sanitizeF(status.angular_vel[2]));
+    _angularVelRrFact.setRawValue(sanitizeF(status.angular_vel[3]));
 
-    _voltageFlFact.setRawValue(status.voltage[0]);
-    _voltageFrFact.setRawValue(status.voltage[1]);
-    _voltageRlFact.setRawValue(status.voltage[2]);
-    _voltageRrFact.setRawValue(status.voltage[3]);
+    _voltageFlFact.setRawValue(sanitizeF(status.voltage[0]));
+    _voltageFrFact.setRawValue(sanitizeF(status.voltage[1]));
+    _voltageRlFact.setRawValue(sanitizeF(status.voltage[2]));
+    _voltageRrFact.setRawValue(sanitizeF(status.voltage[3]));
 
+    // current[] is int32 (mA) and is not shown on the overlay, so it is left as-is.
     _currentFlFact.setRawValue(status.current[0]);
     _currentFrFact.setRawValue(status.current[1]);
     _currentRlFact.setRawValue(status.current[2]);
     _currentRrFact.setRawValue(status.current[3]);
 
-    _temperatureFlFact.setRawValue(status.temperature[0]);
-    _temperatureFrFact.setRawValue(status.temperature[1]);
-    _temperatureRlFact.setRawValue(status.temperature[2]);
-    _temperatureRrFact.setRawValue(status.temperature[3]);
+    _temperatureFlFact.setRawValue(sanitizeF(status.temperature[0]));
+    _temperatureFrFact.setRawValue(sanitizeF(status.temperature[1]));
+    _temperatureRlFact.setRawValue(sanitizeF(status.temperature[2]));
+    _temperatureRrFact.setRawValue(sanitizeF(status.temperature[3]));
 
     _setTelemetryAvailable(true);
 }
